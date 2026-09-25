@@ -7,5 +7,5 @@ editura: Tt
 data_tiparire: "66"
 nr_pagini: 22
 stare: b
-image: /images/images.jpg
+image: images/images.jpg
 ---
