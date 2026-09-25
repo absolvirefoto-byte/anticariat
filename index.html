@@ -139,13 +139,19 @@
                 const nrPagini = produs.nr_pagini || '-';
                 const pret = produs.price || produs.pret || '0';
                 
-                // REPARARE CALE IMAGINE:
-                let caleImagine = produs.image || 'https://via.placeholder.com/300x400?text=Fara+Coperta';
-                
-                // Dacă calea începe cu '/', elimină slash-ul inițial
-                if (caleImagine.startsWith('/')) {
-                    caleImagine = caleImagine.substring(1);
-                }
+// REPARARE CALE IMAGINE PENTRU GITHUB PAGES & DECAP CMS
+let caleImagine = produs.image || 'https://via.placeholder.com/300x400?text=Fara+Coperta';
+
+// 1. Dacă calea începe cu '/', o curățăm
+if (caleImagine.startsWith('/')) {
+    caleImagine = caleImagine.substring(1);
+}
+
+// 2. Corecție folder: dacă Decap CMS a salvat 'images/nume.jpg', 
+// dar fișierul fizic urcat de el se află în 'static/images/nume.jpg'
+if (caleImagine.startsWith('images/') && !caleImagine.startsWith('static/images/')) {
+    caleImagine = 'static/' + caleImagine;
+}
 
                 // Gestionare stare carte (fb, b, s, i)
                 const codStare = (produs.stare || 'b').toLowerCase();
