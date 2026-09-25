@@ -1,5 +1,5 @@
 backend:
-  name: github
+  name: git-gateway
   repo: absolvirefoto-byte/anticariat  # Înlocuiește cu datele tale de GitHub (username/repo)
   branch: main                      # Ramura principală (main sau master)
 
