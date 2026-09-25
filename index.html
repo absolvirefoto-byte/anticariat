@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anticariat Online - Colecția de Cărți Rare și Istorice</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body class="bg-amber-50/50 text-neutral-800 font-sans">
+
+    <!-- Header & Banner Stilizat cu Cărți -->
+    <header class="relative bg-amber-900 text-amber-50 shadow-md overflow-hidden">
+        <!-- Banner fundal stilizat (SVG subtil cu cărți / textură) -->
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#d97706_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        
+        <div class="relative max-w-6xl mx-auto px-4 py-12 text-center">
+            <span class="inline-block bg-amber-800 text-amber-200 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-3 border border-amber-700">Povești care au rezonat în timp</span>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight font-serif text-amber-100">Anticariatul Digital</h1>
+            <p class="text-amber-200/90 mt-3 max-w-xl mx-auto text-base">Descoperă universul cărților vechi și noi. Redă viață paginilor uitate!</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto p-6">
+        
+        <!-- Filtre Categorii -->
+        <div class="flex flex-wrap justify-center gap-2 mb-10" id="category-filters">
+            <button onclick="filterCategory('all')" class="px-4 py-2 bg-amber-800 text-white text-sm font-medium rounded-full shadow hover:bg-amber-900 transition">Toate Cărțile</button>
+            <button onclick="filterCategory('Beletristică')" class="px-4 py-2 bg-white text-amber-900 border border-amber-300 text-sm font-medium rounded-full shadow-sm hover:bg-amber-50 transition">Beletristică</button>
+            <button onclick="filterCategory('Documentar')" class="px-4 py-2 bg-white text-amber-900 border border-amber-300 text-sm font-medium rounded-full shadow-sm hover:bg-amber-50 transition">Documentar</button>
+            <button onclick="filterCategory('SF')" class="px-4 py-2 bg-white text-amber-900 border border-amber-300 text-sm font-medium rounded-full shadow-sm hover:bg-amber-50 transition">SF</button>
+            <button onclick="filterCategory('Literatură pentru copii')" class="px-4 py-2 bg-white text-amber-900 border border-amber-300 text-sm font-medium rounded-full shadow-sm hover:bg-amber-50 transition">Literatură pentru copii</button>
+            <button onclick="filterCategory('Literatură străină')" class="px-4 py-2 bg-white text-amber-900 border border-amber-300 text-sm font-medium rounded-full shadow-sm hover:bg-amber-50 transition">Literatură străină</button>
+            <button onclick="filterCategory('Cărți de școală')" class="px-4 py-2 bg-white text-amber-900 border border-amber-300 text-sm font-medium rounded-full shadow-sm hover:bg-amber-50 transition">Cărți de școală</button>
+        </div>
+
+        <!-- Grilă Produse -->
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <p class="col-span-full text-center text-neutral-500 py-12">Se încarcă rafturile anticariatului...</p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-amber-900 text-amber-100 text-center py-8 mt-16 border-t border-amber-800 text-sm">
+        <p>© 2026 Anticariat Online. Toate drepturile rezervate.</p>
+        <p class="mt-2"><a href="/admin/" class="text-amber-300 underline hover:text-white transition">Autentificare Panou Admin</a></p>
+    </footer>
+
+    <!-- SCRIPTURILE PRINCIPALE -->
+    <script>
+        // Numărul tău de WhatsApp
+        const TELEFON_WHATSAPP = '40720018471'; 
+        
+        // Listă globală pentru produse
+        let toateProdusele = [];
+
+        // Dicționar pentru interpretarea stării cărții
+        const eticheteStare = {
+            'fb': { text: 'Foarte Bună', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+            'b':  { text: 'Bună', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+            's':  { text: 'Satisfăcătoare', color: 'bg-amber-100 text-amber-800 border-amber-300' },
+            'i':  { text: 'Îngrijită / Degraded', color: 'bg-rose-100 text-rose-800 border-rose-300' }
+        };
+
+        // Funcția de filtrare pe categorii
+        function filterCategory(category) {
+            if (category === 'all') {
+                afiseazaProduse(toateProdusele);
+            } else {
+                const filtrate = toateProdusele.filter(p => p.category && p.category.toLowerCase() === category.toLowerCase());
+                afiseazaProduse(filtrate);
+            }
+        }
+
+        // Preluare produse din GitHub API
+        async function incarcaProduseDinGitHub() {
+            const GITHUB_USERNAME = 'absolvirefoto-byte'; // Schimbă cu username-ul tău dacă e cazul
+            const REPO_NAME = 'anticariat';            // Schimbă cu numele repo-ului tău
+
+            const grid = document.getElementById('products-grid');
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/content/produse`);
+
+                if (!response.ok) {
+                    throw new Error(`Eroare GitHub API (Status: ${response.status})`);
+                }
+
+                const files = await response.json();
+
+                if (!Array.isArray(files) || files.length === 0) {
+                    grid.innerHTML = '<p class="col-span-full text-center text-neutral-500 py-12">Nu s-a găsit niciun produs în folderul content/produse.</p>';
+                    return;
+                }
+
+                toateProdusele = [];
+
+                for (const file of files) {
+                    if (file.name.endsWith('.md')) {
+                        const fileResponse = await fetch(file.download_url);
+                        const markdownText = await fileResponse.text();
+
+                        const produs = parseFrontmatter(markdownText);
+
+                        if (produs && (produs.title || produs.nume_carte)) {
+                            toateProdusele.push(produs);
+                        }
+                    }
+                }
+
+                afiseazaProduse(toateProdusele);
+
+            } catch (error) {
+                console.error("Eroare la citirea produselor:", error);
+                grid.innerHTML = `<p class="col-span-full text-center text-red-500 font-medium py-12">Nu s-au putut încărca produsele. ${error.message}</p>`;
+            }
+        }
+
+        // Randare carduri produse (Cărți)
+        function afiseazaProduse(lista) {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = "";
+
+            if (lista.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-center text-neutral-500 py-12">Nu există cărți disponibile în această categorie momentan.</p>';
+                return;
+            }
+
+            lista.forEach(produs => {
+                // Preluare proprietăți specifice cărților (suportă și fallback la title vechi)
+                const titluCarte = produs.nume_carte || produs.title || 'Carte fără titlu';
+                const autor = produs.nume_autor || produs.autor || 'Autor necunoscut';
+                const editura = produs.editura || 'Editură necunoscută';
+                const anTiparire = produs.data_tiparire || produs.an || '-';
+                const nrPagini = produs.nr_pagini || '-';
+                const pret = produs.price || produs.pret || '0';
+                
+                // Gestionare stare carte (fb, b, s, i)
+                const codStare = (produs.stare || 'b').toLowerCase();
+                const infoStare = eticheteStare[codStare] || { text: codStare, color: 'bg-neutral-100 text-neutral-800 border-neutral-300' };
+
+                const mesajWhatsapp = encodeURIComponent(
+                    `Bună ziua! Doresc să comand cartea: "${titluCarte}" de ${autor} (${pret} Lei).`
+                );
+                const linkWhatsapp = `https://wa.me/${TELEFON_WHATSAPP}?text=${mesajWhatsapp}`;
+
+                const productCard = `
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition duration-300 overflow-hidden p-5 border border-amber-200/60 flex flex-col justify-between">
+                        <div>
+                            <!-- Imagine Copertă -->
+                            <div class="relative mb-4">
+                                <img src="${produs.image || 'https://via.placeholder.com/300x400?text=Fara+Coperta'}" alt="${titluCarte}" class="w-full h-56 object-cover rounded-lg shadow-inner border border-amber-100">
+                                <span class="absolute top-2 right-2 bg-amber-900/80 text-amber-100 text-xs px-2.5 py-1 rounded-md font-medium backdrop-blur-xs">
+                                    ${produs.category || 'General'}
+                                </span>
+                            </div>
+
+                            <!-- Informatii Carte -->
+                            <h3 class="font-serif font-bold text-xl text-amber-950 leading-snug mb-1">${titluCarte}</h3>
+                            <p class="text-amber-800/90 font-medium text-sm mb-3">de <span class="underline decoration-amber-300">${autor}</span></p>
+                            
+                            <!-- Detalii Tehnice (Editură, An, Pagini, Stare) -->
+                            <div class="text-xs text-neutral-600 space-y-1 mb-4 bg-amber-50/60 p-3 rounded-lg border border-amber-100">
+                                <p><strong class="text-neutral-700">Editura:</strong> ${editura}</p>
+                                <p><strong class="text-neutral-700">An tipărire:</strong> ${anTiparire} | <strong class="text-neutral-700">Pagini:</strong> ${nrPagini}</p>
+                                <div class="flex items-center gap-2 pt-1">
+                                    <strong class="text-neutral-700">Stare:</strong> 
+                                    <span class="px-2 py-0.5 rounded text-[11px] font-semibold border ${infoStare.color}">${infoStare.text}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Preț și Buton Comandă -->
+                        <div class="pt-2 border-t border-amber-100 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-neutral-400 block">Preț</span>
+                                <span class="text-amber-900 font-extrabold text-xl">${pret} Lei</span>
+                            </div>
+                            
+                            <a href="${linkWhatsapp}" target="_blank" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-3.5 rounded-lg shadow transition">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.842-1.001z"/>
+                                </svg>
+                                Comandă
+                            </a>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += productCard;
+            });
+        }
+
+        // Extragere Frontmatter din Markdown
+        function parseFrontmatter(text) {
+            const match = text.match(/---\s*([\s\S]*?)\s*---/);
+            if (!match) return null;
+
+            const frontmatter = {};
+            match[1].split('\n').forEach(line => {
+                const parts = line.split(':');
+                if (parts.length >= 2) {
+                    const key = parts[0].trim();
+                    const value = parts.slice(1).join(':').trim().replace(/^["'](.+)["']$/, '$1');
+                    frontmatter[key] = value;
+                }
+            });
+            return frontmatter;
+        }
+
+        // Pornire la încărcarea paginii
+        document.addEventListener('DOMContentLoaded', incarcaProduseDinGitHub);
+    </script>
+</body>
+</html>
