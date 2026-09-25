@@ -119,7 +119,21 @@
             }
         }
 
-        // Randare carduri produse (Cărți)
+        // Normalizare și rezolvare cale imagine
+        function rezolvaCaleImagine(imagineRaw) {
+            if (!imagineRaw) return 'https://via.placeholder.com/300x400?text=Fara+Coperta';
+            if (imagineRaw.startsWith('http://') || imagineRaw.startsWith('https://')) return imagineRaw;
+
+            let cale = imagineRaw.trim();
+            if (cale.startsWith('/')) cale = cale.substring(1);
+
+            if (cale.startsWith('images/')) {
+                return 'static/' + cale;
+            }
+
+            return cale;
+        }
+
         // Randare carduri produse (Cărți)
         function afiseazaProduse(lista) {
             const grid = document.getElementById('products-grid');
@@ -131,7 +145,6 @@
             }
 
             lista.forEach(produs => {
-                // Preluare proprietăți specifice cărților
                 const titluCarte = produs.nume_carte || produs.title || 'Carte fără titlu';
                 const autor = produs.nume_autor || produs.autor || 'Autor necunoscut';
                 const editura = produs.editura || 'Editură necunoscută';
@@ -139,21 +152,8 @@
                 const nrPagini = produs.nr_pagini || '-';
                 const pret = produs.price || produs.pret || '0';
                 
-// REPARARE CALE IMAGINE PENTRU GITHUB PAGES & DECAP CMS
-let caleImagine = produs.image || 'https://via.placeholder.com/300x400?text=Fara+Coperta';
+                let caleImagine = rezolvaCaleImagine(produs.image);
 
-// 1. Dacă calea începe cu '/', o curățăm
-if (caleImagine.startsWith('/')) {
-    caleImagine = caleImagine.substring(1);
-}
-
-// 2. Corecție folder: dacă Decap CMS a salvat 'images/nume.jpg', 
-// dar fișierul fizic urcat de el se află în 'static/images/nume.jpg'
-if (caleImagine.startsWith('images/') && !caleImagine.startsWith('static/images/')) {
-    caleImagine = 'static/' + caleImagine;
-}
-
-                // Gestionare stare carte (fb, b, s, i)
                 const codStare = (produs.stare || 'b').toLowerCase();
                 const infoStare = eticheteStare[codStare] || { text: codStare, color: 'bg-neutral-100 text-neutral-800 border-neutral-300' };
 
@@ -167,7 +167,10 @@ if (caleImagine.startsWith('images/') && !caleImagine.startsWith('static/images/
                         <div>
                             <!-- Imagine Copertă -->
                             <div class="relative mb-4">
-                                <img src="${caleImagine}" alt="${titluCarte}" class="w-full h-56 object-cover rounded-lg shadow-inner border border-amber-100" onerror="this.src='https://via.placeholder.com/300x400?text=Eroare+Imagine'">
+                                <img src="${caleImagine}" 
+                                     alt="${titluCarte}" 
+                                     class="w-full h-56 object-cover rounded-lg shadow-inner border border-amber-100"
+                                     onerror="if(!this.dataset.tried){this.dataset.tried=true; this.src='images/${caleImagine.replace('static/images/', '')}';}else{this.src='https://via.placeholder.com/300x400?text=Fara+Coperta';}">
                                 <span class="absolute top-2 right-2 bg-amber-900/80 text-amber-100 text-xs px-2.5 py-1 rounded-md font-medium backdrop-blur-xs">
                                     ${produs.category || 'General'}
                                 </span>
@@ -197,7 +200,7 @@ if (caleImagine.startsWith('images/') && !caleImagine.startsWith('static/images/
                             
                             <a href="${linkWhatsapp}" target="_blank" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-3.5 rounded-lg shadow transition">
                                 <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.842-1.001z"/>
+                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.705 1.754zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.842-1.001z"/>
                                 </svg>
                                 Comandă
                             </a>
@@ -215,10 +218,11 @@ if (caleImagine.startsWith('images/') && !caleImagine.startsWith('static/images/
 
             const frontmatter = {};
             match[1].split('\n').forEach(line => {
-                const parts = line.split(':');
-                if (parts.length >= 2) {
-                    const key = parts[0].trim();
-                    const value = parts.slice(1).join(':').trim().replace(/^["'](.+)["']$/, '$1');
+                const separatorIndex = line.indexOf(':');
+                if (separatorIndex !== -1) {
+                    const key = line.substring(0, separatorIndex).trim();
+                    let value = line.substring(separatorIndex + 1).trim();
+                    value = value.replace(/^["'](.+)["']$/, '$1');
                     frontmatter[key] = value;
                 }
             });
