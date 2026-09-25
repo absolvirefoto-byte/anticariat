@@ -120,6 +120,7 @@
         }
 
         // Randare carduri produse (Cărți)
+        // Randare carduri produse (Cărți)
         function afiseazaProduse(lista) {
             const grid = document.getElementById('products-grid');
             grid.innerHTML = "";
@@ -130,7 +131,7 @@
             }
 
             lista.forEach(produs => {
-                // Preluare proprietăți specifice cărților (suportă și fallback la title vechi)
+                // Preluare proprietăți specifice cărților
                 const titluCarte = produs.nume_carte || produs.title || 'Carte fără titlu';
                 const autor = produs.nume_autor || produs.autor || 'Autor necunoscut';
                 const editura = produs.editura || 'Editură necunoscută';
@@ -138,6 +139,14 @@
                 const nrPagini = produs.nr_pagini || '-';
                 const pret = produs.price || produs.pret || '0';
                 
+                // REPARARE CALE IMAGINE:
+                let caleImagine = produs.image || 'https://via.placeholder.com/300x400?text=Fara+Coperta';
+                
+                // Dacă calea începe cu '/', elimină slash-ul inițial
+                if (caleImagine.startsWith('/')) {
+                    caleImagine = caleImagine.substring(1);
+                }
+
                 // Gestionare stare carte (fb, b, s, i)
                 const codStare = (produs.stare || 'b').toLowerCase();
                 const infoStare = eticheteStare[codStare] || { text: codStare, color: 'bg-neutral-100 text-neutral-800 border-neutral-300' };
@@ -152,7 +161,7 @@
                         <div>
                             <!-- Imagine Copertă -->
                             <div class="relative mb-4">
-                                <img src="${produs.image || 'https://via.placeholder.com/300x400?text=Fara+Coperta'}" alt="${titluCarte}" class="w-full h-56 object-cover rounded-lg shadow-inner border border-amber-100">
+                                <img src="${caleImagine}" alt="${titluCarte}" class="w-full h-56 object-cover rounded-lg shadow-inner border border-amber-100" onerror="this.src='https://via.placeholder.com/300x400?text=Eroare+Imagine'">
                                 <span class="absolute top-2 right-2 bg-amber-900/80 text-amber-100 text-xs px-2.5 py-1 rounded-md font-medium backdrop-blur-xs">
                                     ${produs.category || 'General'}
                                 </span>
