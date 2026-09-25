@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: figurineipsos-lab/depictat  # Înlocuiește cu datele tale de GitHub (username/repo)
+  repo: absolvirefoto-byte/anticariat  # Înlocuiește cu datele tale de GitHub (username/repo)
   branch: main                      # Ramura principală (main sau master)
 
 media_folder: "static/images"       # Unde se salvează imaginile urcate
